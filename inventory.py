@@ -117,7 +117,7 @@ def cmd_list(args):
         return
 
     headers = ["ID", "SKU", "Name", "Category", "On Hand", "Unit", "Cost", "Price", "Status"]
-    widths = [4, 12, 25, 15, 8, 6, 10, 10, 10]
+    widths = [4, 22, 24, 13, 8, 6, 10, 10, 6]
     print()
     _print_table(headers, [
         [
@@ -218,7 +218,7 @@ def cmd_history(args):
         return
 
     headers = ["ID", "Date", "SKU", "Product", "Type", "Qty", "Price", "Reference"]
-    widths = [5, 19, 12, 20, 12, 6, 10, 15]
+    widths = [5, 19, 22, 24, 10, 8, 10, 18]
     print()
     _print_table(headers, [
         [
@@ -274,7 +274,7 @@ def cmd_report(args):
             print("No low-stock products.")
             return
         headers = ["SKU", "Name", "On Hand", "Reorder At", "Need to Order"]
-        widths = [12, 30, 10, 12, 14]
+        widths = [22, 28, 10, 12, 14]
         print()
         _print_table(headers, [
             [p.sku, p.name, f"{p.quantity_on_hand:g}", f"{p.reorder_level:g}",
@@ -289,7 +289,7 @@ def cmd_report(args):
             print("No products.")
             return
         headers = ["SKU", "Name", "Qty", "Cost Price", "Stock Value"]
-        widths = [12, 30, 8, 12, 14]
+        widths = [22, 32, 8, 12, 14]
         total = sum(p.stock_value for p in products)
         print()
         _print_table(headers, [
