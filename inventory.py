@@ -96,10 +96,10 @@ def cmd_show(args):
     print(f"  Unit        : {product.unit}")
     print(f"  Cost Price  : {_fmt_currency(product.cost_price)}")
     print(f"  Unit Price  : {_fmt_currency(product.unit_price)}")
-    print(f"  On Hand     : {product.quantity_on_hand} {product.unit}")
+    print(f"  On Hand     : {product.quantity_on_hand:g} {product.unit}")
     print(f"  Stock Value : {_fmt_currency(product.stock_value)}")
-    print(f"  Reorder At  : {product.reorder_level} {product.unit}")
-    print(f"  Reorder Qty : {product.reorder_quantity} {product.unit}")
+    print(f"  Reorder At  : {product.reorder_level:g} {product.unit}")
+    print(f"  Reorder Qty : {product.reorder_quantity:g} {product.unit}")
     status = "LOW STOCK" if product.is_low_stock else "OK"
     print(f"  Status      : {status}")
     print(f"  Created     : {product.created_at[:19]}")
@@ -122,7 +122,7 @@ def cmd_list(args):
     _print_table(headers, [
         [
             p.id, p.sku, p.name, p.category,
-            p.quantity_on_hand, p.unit,
+            f"{p.quantity_on_hand:g}", p.unit,
             _fmt_currency(p.cost_price),
             _fmt_currency(p.unit_price),
             "LOW" if p.is_low_stock else "OK",
@@ -145,14 +145,14 @@ def cmd_receive(args):
         reference=args.reference or "",
         notes=args.notes or "",
     )
-    print(f"Received {args.quantity} {product.unit} of {product.sku}. "
-          f"New stock: {updated.quantity_on_hand}")
+    print(f"Received {args.quantity:g} {product.unit} of {product.sku}. "
+          f"New stock: {updated.quantity_on_hand:g}")
 
 
 def cmd_sell(args):
     product = _resolve_product(args.product)
     if product.quantity_on_hand < args.quantity:
-        print(f"Error: insufficient stock. Available: {product.quantity_on_hand} {product.unit}.")
+        print(f"Error: insufficient stock. Available: {product.quantity_on_hand:g} {product.unit}.")
         sys.exit(1)
     updated = db.adjust_stock(product.id, -args.quantity)
     db.record_transaction(
@@ -163,10 +163,10 @@ def cmd_sell(args):
         reference=args.reference or "",
         notes=args.notes or "",
     )
-    print(f"Sold {args.quantity} {product.unit} of {product.sku}. "
-          f"Remaining stock: {updated.quantity_on_hand}")
+    print(f"Sold {args.quantity:g} {product.unit} of {product.sku}. "
+          f"Remaining stock: {updated.quantity_on_hand:g}")
     if updated.is_low_stock:
-        print(f"  WARNING: Stock is at or below reorder level ({product.reorder_level}).")
+        print(f"  WARNING: Stock is at or below reorder level ({product.reorder_level:g}).")
 
 
 def cmd_adjust(args):
@@ -181,7 +181,7 @@ def cmd_adjust(args):
         reference=args.reference or "",
         notes=args.notes or f"Manual adjustment to {args.quantity}",
     )
-    print(f"Adjusted {product.sku} stock: {product.quantity_on_hand} -> {updated.quantity_on_hand}")
+    print(f"Adjusted {product.sku} stock: {product.quantity_on_hand:g} -> {updated.quantity_on_hand:g}")
 
 
 def cmd_return(args):
@@ -195,8 +195,8 @@ def cmd_return(args):
         reference=args.reference or "",
         notes=args.notes or "",
     )
-    print(f"Returned {args.quantity} {product.unit} of {product.sku}. "
-          f"New stock: {updated.quantity_on_hand}")
+    print(f"Returned {args.quantity:g} {product.unit} of {product.sku}. "
+          f"New stock: {updated.quantity_on_hand:g}")
 
 
 # --- History ---
@@ -227,7 +227,7 @@ def cmd_history(args):
             t.product_sku,
             t.product_name,
             t.transaction_type,
-            t.quantity,
+            f"{t.quantity:g}",
             _fmt_currency(t.unit_price),
             t.reference or "—",
         ]
@@ -247,7 +247,7 @@ def cmd_report(args):
         print("  INVENTORY SUMMARY")
         print(f"{'='*40}")
         print(f"  Total Products    : {summary['total_products']}")
-        print(f"  Total Units       : {summary['total_units'] or 0:,}")
+        print(f"  Total Units       : {summary['total_units'] or 0:g}")
         print(f"  Total Value       : {_fmt_currency(summary['total_value'] or 0)}")
         print(f"  Low Stock Items   : {summary['low_stock_count']}")
         print(f"  Out of Stock      : {summary['out_of_stock_count']}")
@@ -262,7 +262,7 @@ def cmd_report(args):
         widths = [20, 10, 12, 15]
         print()
         _print_table(headers, [
-            [r["category"], r["product_count"], f"{r['total_units']:,}",
+            [r["category"], r["product_count"], f"{r['total_units'] or 0:g}",
              _fmt_currency(r["total_value"] or 0)]
             for r in rows
         ], widths)
@@ -277,8 +277,8 @@ def cmd_report(args):
         widths = [12, 30, 10, 12, 14]
         print()
         _print_table(headers, [
-            [p.sku, p.name, p.quantity_on_hand, p.reorder_level,
-             max(0, p.reorder_quantity - p.quantity_on_hand)]
+            [p.sku, p.name, f"{p.quantity_on_hand:g}", f"{p.reorder_level:g}",
+             f"{max(0.0, p.reorder_quantity - p.quantity_on_hand):g}"]
             for p in products
         ], widths)
         print(f"\n{len(products)} item(s) need restocking")
@@ -293,7 +293,7 @@ def cmd_report(args):
         total = sum(p.stock_value for p in products)
         print()
         _print_table(headers, [
-            [p.sku, p.name, p.quantity_on_hand,
+            [p.sku, p.name, f"{p.quantity_on_hand:g}",
              _fmt_currency(p.cost_price), _fmt_currency(p.stock_value)]
             for p in products
         ], widths)
@@ -332,9 +332,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--category", "-c", default="General")
     p_add.add_argument("--unit-price", type=float, default=0.0)
     p_add.add_argument("--cost-price", type=float, default=0.0)
-    p_add.add_argument("--quantity", "-q", type=int, default=0)
-    p_add.add_argument("--reorder-level", type=int, default=10)
-    p_add.add_argument("--reorder-quantity", type=int, default=50)
+    p_add.add_argument("--quantity", "-q", type=float, default=0.0)
+    p_add.add_argument("--reorder-level", type=float, default=0.0)
+    p_add.add_argument("--reorder-quantity", type=float, default=0.0)
     p_add.add_argument("--unit", default="units")
 
     # --- update ---
@@ -345,8 +345,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_upd.add_argument("--category")
     p_upd.add_argument("--unit-price", type=float)
     p_upd.add_argument("--cost-price", type=float)
-    p_upd.add_argument("--reorder-level", type=int)
-    p_upd.add_argument("--reorder-quantity", type=int)
+    p_upd.add_argument("--reorder-level", type=float)
+    p_upd.add_argument("--reorder-quantity", type=float)
     p_upd.add_argument("--unit")
 
     # --- delete ---
@@ -366,7 +366,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- receive ---
     p_recv = sub.add_parser("receive", help="Receive stock (purchase)")
     p_recv.add_argument("product", help="Product ID or SKU")
-    p_recv.add_argument("quantity", type=int)
+    p_recv.add_argument("quantity", type=float)
     p_recv.add_argument("--price", type=float, help="Override cost price")
     p_recv.add_argument("--reference", "-r")
     p_recv.add_argument("--notes", "-n")
@@ -374,7 +374,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- sell ---
     p_sell = sub.add_parser("sell", help="Record a sale")
     p_sell.add_argument("product", help="Product ID or SKU")
-    p_sell.add_argument("quantity", type=int)
+    p_sell.add_argument("quantity", type=float)
     p_sell.add_argument("--price", type=float, help="Override unit price")
     p_sell.add_argument("--reference", "-r")
     p_sell.add_argument("--notes", "-n")
@@ -382,14 +382,14 @@ def build_parser() -> argparse.ArgumentParser:
     # --- adjust ---
     p_adj = sub.add_parser("adjust", help="Set stock to exact quantity (stock-take)")
     p_adj.add_argument("product", help="Product ID or SKU")
-    p_adj.add_argument("quantity", type=int, help="New on-hand quantity")
+    p_adj.add_argument("quantity", type=float, help="New on-hand quantity")
     p_adj.add_argument("--reference", "-r")
     p_adj.add_argument("--notes", "-n")
 
     # --- return ---
     p_ret = sub.add_parser("return", help="Record a customer return")
     p_ret.add_argument("product", help="Product ID or SKU")
-    p_ret.add_argument("quantity", type=int)
+    p_ret.add_argument("quantity", type=float)
     p_ret.add_argument("--price", type=float)
     p_ret.add_argument("--reference", "-r")
     p_ret.add_argument("--notes", "-n")

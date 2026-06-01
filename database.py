@@ -34,9 +34,9 @@ def init_db():
                 category TEXT DEFAULT 'General',
                 unit_price REAL NOT NULL DEFAULT 0.0,
                 cost_price REAL NOT NULL DEFAULT 0.0,
-                quantity_on_hand INTEGER NOT NULL DEFAULT 0,
-                reorder_level INTEGER NOT NULL DEFAULT 10,
-                reorder_quantity INTEGER NOT NULL DEFAULT 50,
+                quantity_on_hand REAL NOT NULL DEFAULT 0.0,
+                reorder_level REAL NOT NULL DEFAULT 10.0,
+                reorder_quantity REAL NOT NULL DEFAULT 50.0,
                 unit TEXT NOT NULL DEFAULT 'units',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
@@ -46,7 +46,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 product_id INTEGER NOT NULL REFERENCES products(id),
                 transaction_type TEXT NOT NULL,
-                quantity INTEGER NOT NULL,
+                quantity REAL NOT NULL,
                 unit_price REAL NOT NULL DEFAULT 0.0,
                 reference TEXT DEFAULT '',
                 notes TEXT DEFAULT '',
@@ -131,7 +131,7 @@ def delete_product(product_id: int) -> bool:
         return cur.rowcount > 0
 
 
-def adjust_stock(product_id: int, delta: int) -> Optional[Product]:
+def adjust_stock(product_id: int, delta: float) -> Optional[Product]:
     now = datetime.now().isoformat()
     with get_conn() as conn:
         conn.execute(
@@ -149,7 +149,7 @@ def list_categories() -> List[str]:
 
 # --- Transactions ---
 
-def record_transaction(product_id: int, transaction_type: str, quantity: int,
+def record_transaction(product_id: int, transaction_type: str, quantity: float,
                        unit_price: float, reference: str = "", notes: str = "") -> Transaction:
     now = datetime.now().isoformat()
     with get_conn() as conn:

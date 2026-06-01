@@ -20,9 +20,9 @@ class Product:
     category: str
     unit_price: float
     cost_price: float
-    quantity_on_hand: int
-    reorder_level: int
-    reorder_quantity: int
+    quantity_on_hand: float
+    reorder_level: float
+    reorder_quantity: float
     unit: str
     created_at: str
     updated_at: str
@@ -41,7 +41,7 @@ class Transaction:
     id: int
     product_id: int
     transaction_type: str
-    quantity: int
+    quantity: float
     unit_price: float
     reference: str
     notes: str
